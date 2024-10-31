@@ -1,0 +1,12 @@
+gen:
+  openssl genpkey -algorithm ed25519 -out ed25519_private.pem
+
+pub:
+  openssl pkey -in ed25519_private.pem -pubout -out ed25519_public.pem
+
+raw:
+  # Convert PEM to DER format
+  openssl pkey -pubin -in ed25519_public.pem -outform DER -out ed25519_public.der
+
+  # Extract the last 32 bytes (which represent the raw Ed25519 public key)
+  tail -c 32 ed25519_public.der > ed25519_public.raw

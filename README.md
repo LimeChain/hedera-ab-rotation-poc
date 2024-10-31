@@ -104,7 +104,7 @@ Your new project consists of:
 - Test your Solidity contracts, integrated with your zkVM program.
 
   ```sh
-  RISC0_DEV_MODE=true forge test -vvv 
+  RISC0_DEV_MODE=true forge test -vvv
   ```
 
 - Run the same tests, with the full zkVM prover rather than dev-mode, by setting `RISC0_DEV_MODE=false`.
@@ -113,7 +113,7 @@ Your new project consists of:
   RISC0_DEV_MODE=false forge test -vvv
   ```
 
-  Producing the [Groth16 SNARK proofs][Groth16] for this test requires running on an x86 machine with [Docker] installed, or using [Bonsai](#configuring-bonsai). Apple silicon is currently unsupported for local proving, you can find out more info in the relevant issues [here](https://github.com/risc0/risc0/issues/1520) and [here](https://github.com/risc0/risc0/issues/1749). 
+  Producing the [Groth16 SNARK proofs][Groth16] for this test requires running on an x86 machine with [Docker] installed, or using [Bonsai](#configuring-bonsai). Apple silicon is currently unsupported for local proving, you can find out more info in the relevant issues [here](https://github.com/risc0/risc0/issues/1520) and [here](https://github.com/risc0/risc0/issues/1749).
 
 ## Develop Your Application
 
@@ -168,8 +168,8 @@ Below are the primary files in the project directory
 │   ├── Cargo.toml
 │   └── src
 │       └── lib.rs                  // Utility functions
-│       └── bin                     
-│           └── publisher.rs        // Example app to publish program results into your app contract 
+│       └── bin
+│           └── publisher.rs        // Example app to publish program results into your app contract
 ├── contracts
 │   ├── EvenNumber.sol              // Basic example contract for you to modify
 │   └── ImageID.sol                 // Generated contract with the image ID for your zkVM program

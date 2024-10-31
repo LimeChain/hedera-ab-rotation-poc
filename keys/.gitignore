@@ -1,0 +1,4 @@
+*
+!.gitignore
+!Justfile
+!*_public.raw
