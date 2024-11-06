@@ -20,66 +20,42 @@ mod tests {
     use alloy_primitives::{FixedBytes, U256};
     use alloy_sol_types::SolValue;
     use risc0_zkvm::{default_executor, ExecutorEnv};
-
-    #[test]
-    #[ignore]
-    fn proves_even_number() {
-        let even_number = U256::from(1304);
-
-        let env = ExecutorEnv::builder()
-            .write_slice(&even_number.abi_encode())
-            .build()
-            .unwrap();
-
-        // NOTE: Use the executor to run tests without proving.
-        let session_info = default_executor().execute(env, super::IS_EVEN_ELF).unwrap();
-
-        let x = U256::abi_decode(&session_info.journal.bytes, true).unwrap();
-        assert_eq!(x, even_number);
-    }
-
-    #[test]
-    #[ignore]
-    #[should_panic(expected = "number is not even")]
-    fn rejects_odd_number() {
-        let odd_number = U256::from(75);
-
-        let env = ExecutorEnv::builder()
-            .write_slice(&odd_number.abi_encode())
-            .build()
-            .unwrap();
-
-        // NOTE: Use the executor to run tests without proving.
-        default_executor().execute(env, super::IS_EVEN_ELF).unwrap();
-    }
-
-    alloy_sol_types::sol! {
-        #[derive(Debug)]
-        struct AddressBookEntryEth {
-            bytes32 ed25519_public_key;
-            uint64 weight;
-        }
-    }
+    use serde_big_array::Array;
 
     const ED25519_PUBLIC_KEY: &[u8; 32] = include_bytes!("../../keys/ed25519_public.raw");
 
-    #[test]
-    fn corrents() {
-        let pk: FixedBytes<32> = ED25519_PUBLIC_KEY.into();
+    // TODO: automate this and put in scripts in `examples/`
+    const MESSAGE: [u8; 8] = [98, 97, 110, 105, 99, 97, 33, 33];
+    const SIGNATURE: [u8; 64] = [
+        219, 60, 244, 121, 220, 232, 37, 207, 81, 176, 197, 63, 121, 39, 8, 67, 0, 27, 12, 143, 0,
+        68, 250, 163, 178, 69, 20, 120, 168, 87, 193, 44, 23, 224, 67, 65, 127, 230, 225, 181, 103,
+        242, 117, 46, 23, 127, 180, 207, 91, 190, 175, 57, 137, 98, 147, 132, 185, 180, 23, 132,
+        73, 20, 127, 3,
+    ];
 
-        let ab = vec![
-            AddressBookEntryEth {
-                weight: 15,
-                ed25519_public_key: pk.clone(),
-            },
-            AddressBookEntryEth {
-                weight: 16,
-                ed25519_public_key: pk.clone(),
-            },
-        ];
+    #[test]
+    fn corrects() {
+        use serde::Serialize;
+        use serde_big_array::Array;
+
+        #[derive(Serialize)]
+        pub struct StatementIn {
+            pub ab_curr: Vec<([u8; 32], u64)>,
+            pub ab_next_hash: u64,
+            pub signatures: Vec<Array<u8, 64>>,
+        }
+
+        let statement = StatementIn {
+            ab_curr: vec![(*ED25519_PUBLIC_KEY, 15), (*ED25519_PUBLIC_KEY, 16)],
+            ab_next_hash: u64::from_be_bytes(MESSAGE),
+            signatures: vec![
+                Array(SIGNATURE),
+            ],
+        };
 
         let env = ExecutorEnv::builder()
-            .write_slice(&ab.abi_encode().as_slice())
+            .write(&statement)
+            .unwrap()
             .build()
             .unwrap();
 
@@ -87,7 +63,8 @@ mod tests {
             .execute(env, super::AB_ROTATION_ELF)
             .unwrap();
 
-        let total_weight = u64::abi_decode(&session_info.journal.bytes, true).unwrap();
+        let total_weight = session_info.journal.decode::<u64>().unwrap();
+
         assert_eq!(total_weight, 31);
     }
 }
