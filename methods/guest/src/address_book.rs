@@ -47,15 +47,15 @@ impl TryFrom<AddressBookIn> for AddressBook {
     }
 }
 
+pub fn digest_address_book_in(ab: &AddressBookIn) -> Digest {
+    use risc0_zkvm::sha::{Impl as Sha256, Sha256 as _};
+
+    let ab_words = risc0_zkvm::serde::to_vec(ab).unwrap();
+
+    *Sha256::hash_words(&ab_words)
+}
+
 impl AddressBook {
-    pub fn digest(&self) -> Digest {
-        use risc0_zkvm::sha::{Impl as Sha256, Sha256 as _};
-
-        let ab_words = risc0_zkvm::serde::to_vec(self).unwrap();
-
-        *Sha256::hash_words(&ab_words)
-    }
-
     pub fn get_validator_weight_from_signature(
         &self,
         signature: &Signature,

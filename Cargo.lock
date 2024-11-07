@@ -1602,6 +1602,7 @@ checksum = "4a3daa8e81a3963a60642bcc1f90a670680bd4a77535faa384e9d1c79d620871"
 dependencies = [
  "curve25519-dalek",
  "ed25519",
+ "rand_core",
  "serde",
  "sha2",
  "subtle",
@@ -2383,6 +2384,7 @@ dependencies = [
  "alloy-sol-types",
  "ed25519-dalek",
  "hex",
+ "rand",
  "risc0-build",
  "risc0-build-ethereum",
  "risc0-zkp",

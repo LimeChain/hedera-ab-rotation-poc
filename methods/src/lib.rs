@@ -17,38 +17,54 @@ include!(concat!(env!("OUT_DIR"), "/methods.rs"));
 
 #[cfg(test)]
 mod tests {
-    use risc0_zkvm::{default_executor, ExecutorEnv};
+    use ed25519_dalek::ed25519::signature::Signer;
+    use risc0_zkvm::{default_executor, sha::{Digest, Sha256}, ExecutorEnv};
 
-    const ED25519_PUBLIC_KEY: &[u8; 32] = include_bytes!("../../keys/ed25519_public.raw");
+    use serde::Serialize;
+    use serde_big_array::Array;
 
-    // TODO: automate this and put in scripts in `examples/`
-    const SIGNATURE: [u8; 64] = [
-        183, 28, 102, 187, 19, 176, 149, 173, 5, 182, 206, 4, 40, 226, 210, 144, 195, 235, 163, 94,
-        191, 80, 122, 114, 105, 21, 142, 186, 161, 165, 250, 31, 130, 202, 46, 157, 79, 171, 52,
-        218, 112, 177, 233, 36, 8, 252, 197, 44, 20, 20, 198, 212, 50, 16, 189, 26, 107, 188, 242,
-        24, 33, 210, 93, 13,
-    ];
-    const AB_CURR_HASH: [u32; risc0_zkvm::sha::DIGEST_WORDS] = [
-        1470853495, 1794819450, 2790785571, 1857589074, 172372429, 2283190261, 1194808541,
-        3428754279,
-    ];
+    type AddressBookIn = Vec<([u8; 32], u64)>;
+
+    #[derive(Serialize)]
+    pub struct StatementIn {
+        pub ab_curr: AddressBookIn,
+        pub ab_next_hash: Digest,
+        pub signatures: Vec<Array<u8, 64>>,
+    }
 
     #[test]
     fn corrects() {
-        use serde::Serialize;
-        use serde_big_array::Array;
+        let mut csprng = rand::rngs::OsRng;
+        let mut signing_keys: [_; 4] =
+            std::array::from_fn(|_| ed25519_dalek::SigningKey::generate(&mut csprng));
 
-        #[derive(Serialize)]
-        pub struct StatementIn {
-            pub ab_curr: Vec<([u8; 32], u64)>,
-            pub ab_next_hash: [u32; risc0_zkvm::sha::DIGEST_WORDS],
-            pub signatures: Vec<Array<u8, 64>>,
-        }
+        let ab_next: AddressBookIn = vec![
+            // Not important
+            ([0; 32], 15),
+            ([1; 32], 60),
+        ];
+        let ab_next_words = risc0_zkvm::serde::to_vec(&ab_next).unwrap();
+        let ab_next_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_next_words);
+
+        let ab_curr: AddressBookIn = vec![
+            (*signing_keys[0].verifying_key().as_bytes(), 15),
+            (*signing_keys[1].verifying_key().as_bytes(), 15),
+            (*signing_keys[2].verifying_key().as_bytes(), 70),
+            // (*signing_keys[3].verifying_key().as_bytes(), 1),
+        ];
+
+        let ab_curr_words = risc0_zkvm::serde::to_vec(&ab_curr).unwrap();
+        let ab_curr_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_curr_words);
+
+        let signatures = vec![
+           (Array(signing_keys[0].sign(ab_next_hash.as_bytes()).to_bytes())),
+           (Array(signing_keys[1].sign(ab_next_hash.as_bytes()).to_bytes())),
+        ];
 
         let statement = StatementIn {
-            ab_curr: vec![(*ED25519_PUBLIC_KEY, 30), (Default::default(), 70)],
-            ab_next_hash: Default::default(),
-            signatures: vec![Array(SIGNATURE)],
+            ab_curr,
+            ab_next_hash,
+            signatures,
         };
 
         let env = ExecutorEnv::builder()
@@ -61,13 +77,11 @@ mod tests {
             .execute(env, super::AB_ROTATION_ELF)
             .unwrap();
 
-        let ab_curr_hash = session_info
+        let ab_curr_hash_committed = session_info
             .journal
-            .decode::<[u32; risc0_zkvm::sha::DIGEST_WORDS]>()
+            .decode::<Digest>()
             .unwrap();
 
-        println!("{:?}", ab_curr_hash);
-
-        assert_eq!(ab_curr_hash, AB_CURR_HASH)
+        assert_eq!(ab_curr_hash, ab_curr_hash_committed)
     }
 }
