@@ -17,20 +17,20 @@ include!(concat!(env!("OUT_DIR"), "/methods.rs"));
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::{FixedBytes, U256};
-    use alloy_sol_types::SolValue;
     use risc0_zkvm::{default_executor, ExecutorEnv};
-    use serde_big_array::Array;
 
     const ED25519_PUBLIC_KEY: &[u8; 32] = include_bytes!("../../keys/ed25519_public.raw");
 
     // TODO: automate this and put in scripts in `examples/`
-    const MESSAGE: [u8; 8] = [98, 97, 110, 105, 99, 97, 33, 33];
     const SIGNATURE: [u8; 64] = [
-        219, 60, 244, 121, 220, 232, 37, 207, 81, 176, 197, 63, 121, 39, 8, 67, 0, 27, 12, 143, 0,
-        68, 250, 163, 178, 69, 20, 120, 168, 87, 193, 44, 23, 224, 67, 65, 127, 230, 225, 181, 103,
-        242, 117, 46, 23, 127, 180, 207, 91, 190, 175, 57, 137, 98, 147, 132, 185, 180, 23, 132,
-        73, 20, 127, 3,
+        183, 28, 102, 187, 19, 176, 149, 173, 5, 182, 206, 4, 40, 226, 210, 144, 195, 235, 163, 94,
+        191, 80, 122, 114, 105, 21, 142, 186, 161, 165, 250, 31, 130, 202, 46, 157, 79, 171, 52,
+        218, 112, 177, 233, 36, 8, 252, 197, 44, 20, 20, 198, 212, 50, 16, 189, 26, 107, 188, 242,
+        24, 33, 210, 93, 13,
+    ];
+    const AB_CURR_HASH: [u32; risc0_zkvm::sha::DIGEST_WORDS] = [
+        1470853495, 1794819450, 2790785571, 1857589074, 172372429, 2283190261, 1194808541,
+        3428754279,
     ];
 
     #[test]
@@ -41,16 +41,14 @@ mod tests {
         #[derive(Serialize)]
         pub struct StatementIn {
             pub ab_curr: Vec<([u8; 32], u64)>,
-            pub ab_next_hash: u64,
+            pub ab_next_hash: [u32; risc0_zkvm::sha::DIGEST_WORDS],
             pub signatures: Vec<Array<u8, 64>>,
         }
 
         let statement = StatementIn {
-            ab_curr: vec![(*ED25519_PUBLIC_KEY, 15), (*ED25519_PUBLIC_KEY, 16)],
-            ab_next_hash: u64::from_be_bytes(MESSAGE),
-            signatures: vec![
-                Array(SIGNATURE),
-            ],
+            ab_curr: vec![(*ED25519_PUBLIC_KEY, 30), (Default::default(), 70)],
+            ab_next_hash: Default::default(),
+            signatures: vec![Array(SIGNATURE)],
         };
 
         let env = ExecutorEnv::builder()
@@ -63,8 +61,13 @@ mod tests {
             .execute(env, super::AB_ROTATION_ELF)
             .unwrap();
 
-        let total_weight = session_info.journal.decode::<u64>().unwrap();
+        let ab_curr_hash = session_info
+            .journal
+            .decode::<[u32; risc0_zkvm::sha::DIGEST_WORDS]>()
+            .unwrap();
 
-        assert_eq!(total_weight, 31);
+        println!("{:?}", ab_curr_hash);
+
+        assert_eq!(ab_curr_hash, AB_CURR_HASH)
     }
 }

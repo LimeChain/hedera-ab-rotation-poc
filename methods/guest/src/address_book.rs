@@ -1,15 +1,15 @@
-use ark_crypto_primitives::sponge::Absorb;
-use ark_ff::PrimeField;
 use derive_more::derive::Deref;
+use risc0_zkvm::sha::Digest;
+use serde::Serialize;
 use serde_big_array::Array;
 
-use crate::ed25519;
+use crate::ed25519::{self, Signature};
 
 #[cfg(feature = "with_bls_aggregate")]
 pub type BlsPublicKey = ();
 pub type Weight = u64;
 
-#[derive(Debug, Absorb)]
+#[derive(Debug, Serialize)]
 pub struct AddressBookEntry {
     pub ed25519_public_key: ed25519::VerifyingKey,
     // #[cfg(feature = "with_bls_aggregate")]
@@ -17,10 +17,10 @@ pub struct AddressBookEntry {
     pub weight: Weight,
 }
 #[repr(transparent)]
-#[derive(Debug, Deref, Absorb)]
+#[derive(Debug, Deref, Serialize)]
 pub struct AddressBook(pub Vec<AddressBookEntry>);
 
-pub type AddressBookEntryIn = (Array<u8, {ed25519::PUBLIC_KEY_LENGTH}>, Weight);
+pub type AddressBookEntryIn = (Array<u8, { ed25519::PUBLIC_KEY_LENGTH }>, Weight);
 pub type AddressBookIn = Vec<AddressBookEntryIn>;
 
 impl TryFrom<AddressBookEntryIn> for AddressBookEntry {
@@ -33,6 +33,7 @@ impl TryFrom<AddressBookEntryIn> for AddressBookEntry {
         })
     }
 }
+
 impl TryFrom<AddressBookIn> for AddressBook {
     type Error = ();
 
@@ -43,5 +44,28 @@ impl TryFrom<AddressBookIn> for AddressBook {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| ())
             .map(Self)
+    }
+}
+
+impl AddressBook {
+    pub fn digest(&self) -> Digest {
+        use risc0_zkvm::sha::{Impl as Sha256, Sha256 as _};
+
+        let ab_words = risc0_zkvm::serde::to_vec(self).unwrap();
+
+        *Sha256::hash_words(&ab_words)
+    }
+
+    pub fn get_validator_weight_from_signature(
+        &self,
+        signature: &Signature,
+        message: &[u8],
+    ) -> Option<Weight> {
+        self.iter().find_map(|abe| {
+            abe.ed25519_public_key
+                .verify_strict(message, signature)
+                .ok()
+                .map(|_| abe.weight)
+        })
     }
 }

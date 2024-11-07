@@ -1,10 +1,11 @@
 use ark_crypto_primitives::sponge::Absorb;
 use ark_ff::PrimeField;
 use derive_more::derive::Deref;
+use serde::Serialize;
 use serde_big_array::Array;
 
 #[repr(transparent)]
-#[derive(Debug, Deref)]
+#[derive(Debug, Deref, Serialize)]
 pub struct VerifyingKey(pub ed25519_dalek::VerifyingKey);
 
 pub const PUBLIC_KEY_LENGTH: usize = ed25519_dalek::PUBLIC_KEY_LENGTH;
@@ -43,15 +44,14 @@ impl Absorb for VerifyingKey {
         dest.push(F::from_le_bytes_mod_order(&second_chunk));
     }
 }
-pub type SigningKey = ed25519_dalek::SigningKey;
 
 ///////////
 
 #[repr(transparent)]
-#[derive(Debug, Deref)]
+#[derive(Debug, Deref, Serialize)]
 pub struct Signature(pub ed25519_dalek::Signature);
 #[repr(transparent)]
-#[derive(Debug, Deref)]
+#[derive(Debug, Deref, Serialize)]
 pub struct Signatures(Vec<Signature>);
 
 pub type SignatureIn = Array<u8, { SIGNATURE_LENGTH }>;

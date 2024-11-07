@@ -3,7 +3,7 @@ use ed25519_dalek::{ed25519::signature::SignerMut, pkcs8::{DecodePrivateKey, Dec
 fn main() {
     let mut sc = SigningKey::read_pkcs8_pem_file("../keys/ed25519_private.pem").unwrap();
 
-    let message = b"banica!!";
+    let message: &[u8; 32] = &[0; 32];
 
     println!("Message is: {:?}", message);
 
