@@ -5,7 +5,6 @@ use risc0_zkvm::guest::env;
 // use ark_ec::pairing::Pairing;
 // use ark_ff::PrimeField;
 // use ark_serialize::CanonicalDeserialize;
-// use sha2::{Digest, Sha384};
 
 mod address_book;
 mod ed25519;
@@ -32,10 +31,7 @@ fn main() {
     let total_weight: u64 = statement.ab_curr.iter().map(|abe| abe.weight).sum();
 
     // Convert the ab_next_hash into bytes (from words)
-    let ab_next_hash_bytes = bytemuck::cast_ref::<
-        [u32; risc0_zkvm::sha::DIGEST_WORDS],
-        [u8;  risc0_zkvm::sha::DIGEST_BYTES],
-    >(&statement.ab_next_hash);
+    let ab_next_hash_bytes = statement.ab_next_hash.as_bytes();
 
     let signers_weight: u64 = statement
         .signatures

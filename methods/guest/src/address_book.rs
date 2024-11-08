@@ -1,6 +1,5 @@
 use derive_more::derive::Deref;
 use risc0_zkvm::sha::Digest;
-use serde::Serialize;
 use serde_big_array::Array;
 
 use crate::ed25519::{self, Signature};
@@ -9,7 +8,7 @@ use crate::ed25519::{self, Signature};
 pub type BlsPublicKey = ();
 pub type Weight = u64;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct AddressBookEntry {
     pub ed25519_public_key: ed25519::VerifyingKey,
     // #[cfg(feature = "with_bls_aggregate")]
@@ -17,7 +16,7 @@ pub struct AddressBookEntry {
     pub weight: Weight,
 }
 #[repr(transparent)]
-#[derive(Debug, Deref, Serialize)]
+#[derive(Debug, Deref)]
 pub struct AddressBook(pub Vec<AddressBookEntry>);
 
 pub type AddressBookEntryIn = (Array<u8, { ed25519::PUBLIC_KEY_LENGTH }>, Weight);

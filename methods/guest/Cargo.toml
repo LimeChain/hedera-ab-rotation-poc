@@ -24,7 +24,6 @@ ark-bn254 = "0.5.0"
 ark-crypto-primitives = { version = "0.5.0", features = ["sponge", "snark", "commitment"] }
 ark-crypto-primitives-macros = "0.5.0"
 ed25519-dalek = { version = "2.1.1", features = ["serde"] }
-bytemuck = "1.19.0"
 
 [features]
 with_bls_aggregate = []
