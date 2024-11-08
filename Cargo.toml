@@ -23,7 +23,11 @@ risc0-ethereum-contracts = { git = "https://github.com/risc0/risc0-ethereum", ta
 risc0-zkvm = { version = "1.1", default-features = false }
 risc0-zkp = { version = "1.1", default-features = false }
 serde = { version = "1.0", features = ["derive", "std"] }
+serde_json = "1.0"
+serde-big-array = "0.5.1"
 url = { version = "2.5" }
+ed25519-dalek = { version = "2.1.1", features = ["serde", "pem", "rand_core"] }
+rand = "0.8.5"
 
 [profile.release]
 debug = 1

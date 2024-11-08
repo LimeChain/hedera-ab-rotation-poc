@@ -9,10 +9,15 @@ alloy-primitives = { workspace = true }
 alloy-sol-types = { workspace = true }
 anyhow = { workspace = true }
 clap = { version = "4.0", features = ["derive", "env"] }
+ed25519-dalek = { workspace = true }
 env_logger = { version = "0.10" }
 log = { workspace = true }
 methods = { workspace = true }
+rand = { workspace = true }
 risc0-ethereum-contracts = { workspace = true }
 risc0-zkvm = { workspace = true, features = ["client"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde-big-array = { workspace = true }
 tokio = { version = "1.35", features = ["full"] }
 url = { workspace = true }

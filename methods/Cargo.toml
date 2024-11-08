@@ -13,11 +13,4 @@ risc0-build-ethereum = { workspace = true }
 risc0-zkp = { workspace = true }
 
 [dev-dependencies]
-alloy-primitives = { workspace = true }
-alloy-sol-types = { workspace = true }
 risc0-zkvm = { workspace = true, features = ["client"] }
-
-ed25519-dalek = { version = "2.1.1", features = ["serde", "pem", "rand_core"] }
-rand = "0.8.5"
-serde = "1.0"
-serde-big-array = "0.5.1"

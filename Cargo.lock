@@ -683,11 +683,16 @@ dependencies = [
  "alloy-sol-types",
  "anyhow",
  "clap",
+ "ed25519-dalek",
  "env_logger",
  "log",
  "methods",
+ "rand",
  "risc0-ethereum-contracts",
  "risc0-zkvm",
+ "serde",
+ "serde-big-array",
+ "serde_json",
  "tokio",
  "url",
 ]
@@ -2380,17 +2385,11 @@ dependencies = [
 name = "methods"
 version = "0.1.0"
 dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "ed25519-dalek",
  "hex",
- "rand",
  "risc0-build",
  "risc0-build-ethereum",
  "risc0-zkp",
  "risc0-zkvm",
- "serde",
- "serde-big-array",
 ]
 
 [[package]]

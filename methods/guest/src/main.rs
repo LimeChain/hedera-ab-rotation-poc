@@ -1,4 +1,6 @@
 #![no_main]
+// NOTE: need `Vec`-like structure for some of the logic
+// #![no_std]
 
 use risc0_zkvm::guest::env;
 // use ark_bn254::{Bn254, Fr, G1Projective, G2Projective};
@@ -31,7 +33,7 @@ fn main() {
     let total_weight: u64 = statement.ab_curr.iter().map(|abe| abe.weight).sum();
 
     // Convert the ab_next_hash into bytes (from words)
-    let ab_next_hash_bytes = statement.ab_next_hash.as_bytes();
+    let ab_next_hash_bytes: &[u8] = statement.ab_next_hash.as_bytes();
 
     let signers_weight: u64 = statement
         .signatures
