@@ -24,6 +24,7 @@ ark-bn254 = "0.5.0"
 ark-crypto-primitives = { version = "0.5.0", features = ["sponge", "snark", "commitment"] }
 ark-crypto-primitives-macros = "0.5.0"
 ed25519-dalek = { version = "2.1.1", features = ["serde"] }
+smallvec = { version = "1.13", features = ["const_generics", "serde"] }
 
 [features]
 with_bls_aggregate = []

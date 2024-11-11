@@ -1173,6 +1173,7 @@ dependencies = [
  "risc0-zkvm",
  "serde",
  "serde-big-array",
+ "smallvec",
 ]
 
 [[package]]
@@ -2011,6 +2012,15 @@ checksum = "77549399552de45a898a580c1b41d445bf730df867cc44e6c0233bbc4b8329de"
 dependencies = [
  "digest 0.10.7",
  "rand_core",
+]
+
+[[package]]
+name = "smallvec"
+version = "1.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

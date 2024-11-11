@@ -1,5 +1,8 @@
 use derive_more::derive::Deref;
 use serde_big_array::Array;
+use smallvec::SmallVec;
+
+use crate::address_book::MAXIMUM_VALIDATORS;
 
 #[repr(transparent)]
 #[derive(Debug, Deref)]
@@ -23,10 +26,10 @@ impl VerifyingKey {
 pub struct Signature(pub ed25519_dalek::Signature);
 #[repr(transparent)]
 #[derive(Debug, Deref)]
-pub struct Signatures(Vec<Signature>);
+pub struct Signatures(SmallVec<[Signature; MAXIMUM_VALIDATORS]>);
 
 pub type SignatureIn = Array<u8, { SIGNATURE_LENGTH }>;
-pub type SignaturesIn = Vec<SignatureIn>;
+pub type SignaturesIn = SmallVec<[SignatureIn; MAXIMUM_VALIDATORS]>;
 
 impl TryFrom<SignatureIn> for Signature {
     type Error = ();
@@ -43,7 +46,7 @@ impl TryFrom<SignaturesIn> for Signatures {
         value
             .into_iter()
             .map(TryFrom::try_from)
-            .collect::<Result<Vec<_>, _>>()
+            .collect::<Result<SmallVec<[_; MAXIMUM_VALIDATORS]>, _>>()
             .map_err(|_| ())
             .map(Self)
     }

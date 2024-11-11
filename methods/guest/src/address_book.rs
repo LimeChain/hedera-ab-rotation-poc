@@ -1,6 +1,7 @@
 use derive_more::derive::Deref;
 use risc0_zkvm::sha::Digest;
 use serde_big_array::Array;
+use smallvec::SmallVec;
 
 use crate::ed25519::{self, Signature};
 
@@ -17,10 +18,12 @@ pub struct AddressBookEntry {
 }
 #[repr(transparent)]
 #[derive(Debug, Deref)]
-pub struct AddressBook(pub Vec<AddressBookEntry>);
+pub struct AddressBook(pub SmallVec<[AddressBookEntry; MAXIMUM_VALIDATORS]>);
+
+pub const MAXIMUM_VALIDATORS: usize = 64;
 
 pub type AddressBookEntryIn = (Array<u8, { ed25519::PUBLIC_KEY_LENGTH }>, Weight);
-pub type AddressBookIn = Vec<AddressBookEntryIn>;
+pub type AddressBookIn = SmallVec<[AddressBookEntryIn; MAXIMUM_VALIDATORS]>;
 
 impl TryFrom<AddressBookEntryIn> for AddressBookEntry {
     type Error = ();
@@ -40,7 +43,7 @@ impl TryFrom<AddressBookIn> for AddressBook {
         value
             .into_iter()
             .map(TryFrom::try_from)
-            .collect::<Result<Vec<_>, _>>()
+            .collect::<Result<SmallVec<[_; MAXIMUM_VALIDATORS]>, _>>()
             .map_err(|_| ())
             .map(Self)
     }

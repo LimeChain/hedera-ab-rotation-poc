@@ -12,8 +12,8 @@ use methods::AB_ROTATION_ELF;
 use risc0_ethereum_contracts::encode_seal;
 use risc0_zkvm::sha::{Digest, Sha256};
 use risc0_zkvm::{default_prover, ExecutorEnv, ProverOpts, VerifierContext};
-use url::Url;
 use serde::Deserialize;
+use url::Url;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -22,8 +22,8 @@ fn main() -> Result<()> {
 
     let ab_next: AddressBookIn = vec![
         // Not important
-        // ([0; 32], 15),
-        // ([1; 32], 60),
+        ([0; 32], 15),
+        ([1; 32], 60),
     ];
     let ab_next_words = risc0_zkvm::serde::to_vec(&ab_next).unwrap();
     let ab_next_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_next_words);
@@ -51,7 +51,11 @@ fn main() -> Result<()> {
         signatures,
     };
 
-    let env = ExecutorEnv::builder().write(&statement)?.build()?;
+    let mut output = Vec::new();
+    let env = ExecutorEnv::builder()
+        .write(&statement)?
+        .stdout(&mut output)
+        .build()?;
 
     let receipt = default_prover()
         .prove_with_ctx(
@@ -64,6 +68,9 @@ fn main() -> Result<()> {
 
     // Encode the seal with the selector.
     // let seal = encode_seal(&receipt)?;
+
+    let cycle_count = risc0_zkvm::serde::from_slice::<u64, u8>(&output)?;
+    println!("Cycle count: {}", cycle_count);
 
     let ab_curr_hash_committed = receipt.journal.decode::<Digest>()?;
 

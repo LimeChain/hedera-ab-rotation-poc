@@ -1,6 +1,5 @@
 #![no_main]
-// NOTE: need `Vec`-like structure for some of the logic
-// #![no_std]
+#![no_std]
 
 use risc0_zkvm::guest::env;
 // use ark_bn254::{Bn254, Fr, G1Projective, G2Projective};
@@ -47,15 +46,13 @@ fn main() {
         .expect("Verification failed");
 
     // Assert that enough (30%) of the current validators have signed the next AB
-    let proportion: f64 = (signers_weight as f64) / (total_weight as f64);
-    env::log(&format!("Proportion is {}", proportion));
-    assert!(proportion >= 0.3);
+    // NOTE: not using floats to avoid rounding issues
+    let enough_signatures = (10 * signers_weight) >= (3 * total_weight);
+    assert!(enough_signatures);
 
     let end_cycle_count = env::cycle_count();
-    env::log(&format!(
-        "Cycle count after rotation validation: {}",
-        end_cycle_count - start_cycle_count
-    ));
+    let cycle_count = end_cycle_count - start_cycle_count;
 
+    env::write(&cycle_count);
     env::commit(&ab_curr_hash);
 }
