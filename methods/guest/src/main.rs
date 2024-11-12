@@ -12,7 +12,6 @@ mod address_book;
 mod ed25519;
 mod statement;
 
-use smallvec::SmallVec;
 use statement::{Statement, StatementIn};
 
 use crate::address_book::digest_address_book_in;
@@ -23,6 +22,11 @@ fn main() {
 
     // Fetch the statement from the environment ...
     let statement_in: StatementIn = env::read::<StatementIn>();
+
+    assert!(
+        statement_in.ab_curr.len() == statement_in.signatures.len(),
+        "There is an (optional) signature for each current validator"
+    );
 
     // Get the SHA256 of the current AB (using the provided ECALL)
     let ab_curr_hash = digest_address_book_in(&statement_in.ab_curr);
@@ -36,31 +40,19 @@ fn main() {
     // Convert the ab_next_hash into bytes (from words)
     let ab_next_hash_bytes: &[u8] = statement.ab_next_hash.as_bytes();
 
-    // Check that all signatures are unique (no duplicates)
-    // NOTE: we don't have {BTree,Hash}Set, this (O(n^2)) is fine for small amounts of `MAXIMUM_VALIDATORS`
-    let all_unique = {
-        let mut unique = SmallVec::<[&ed25519::Signature; MAXIMUM_VALIDATORS]>::new();
-        statement.signatures.iter().all(|sig| {
-            if unique.contains(&sig) {
-                false
-            } else {
-                unique.push(sig);
-                true
-            }
-        })
-    };
-    assert!(all_unique);
+    let signers_weight: u64 = core::iter::zip(statement.ab_curr.0, statement.signatures.0).fold(
+        0,
+        |acc, (abe, ms)| -> u64 {
+            let mw = ms.and_then(|signature| {
+                abe.ed25519_public_key
+                    .verify_strict(ab_next_hash_bytes, &signature)
+                    .ok()
+                    .map(|_| abe.weight)
+            });
 
-    let signers_weight: u64 = statement
-        .signatures
-        .iter()
-        .try_fold(0, |acc, signature| -> Option<u64> {
-            statement
-                .ab_curr
-                .get_validator_weight_from_signature(signature, ab_next_hash_bytes)
-                .map(|w| acc + w)
-        })
-        .expect("Verification failed");
+            acc + mw.unwrap_or_default()
+        },
+    );
 
     // Assert that enough (30%) of the current validators have signed the next AB
     // NOTE: not using floats to avoid rounding issues

@@ -26,10 +26,10 @@ impl VerifyingKey {
 pub struct Signature(pub ed25519_dalek::Signature);
 #[repr(transparent)]
 #[derive(Debug, Deref)]
-pub struct Signatures(SmallVec<[Signature; MAXIMUM_VALIDATORS]>);
+pub struct Signatures(pub SmallVec<[Option<Signature>; MAXIMUM_VALIDATORS]>);
 
 pub type SignatureIn = Array<u8, { SIGNATURE_LENGTH }>;
-pub type SignaturesIn = SmallVec<[SignatureIn; MAXIMUM_VALIDATORS]>;
+pub type SignaturesIn = SmallVec<[Option<SignatureIn>; MAXIMUM_VALIDATORS]>;
 
 impl TryFrom<SignatureIn> for Signature {
     type Error = ();
@@ -45,7 +45,10 @@ impl TryFrom<SignaturesIn> for Signatures {
     fn try_from(value: SignaturesIn) -> Result<Self, Self::Error> {
         value
             .into_iter()
-            .map(TryFrom::try_from)
+            .map(|ms| match ms {
+                Some(s) => TryFrom::try_from(s).map(Option::Some),
+                None => Ok(None),
+            })
             .collect::<Result<SmallVec<[_; MAXIMUM_VALIDATORS]>, _>>()
             .map_err(|_| ())
             .map(Self)

@@ -31,11 +31,7 @@ mod tests {
 
         let message = ab_next_hash.as_bytes();
 
-        let signatures = vec![
-            //
-            validators.sign(0, message),
-            validators.sign(1, message),
-        ];
+        let signatures = validators.all_sign(2, message).to_vec();
 
         let statement = StatementIn {
             ab_curr,
@@ -87,7 +83,7 @@ mod tests {
 
         let message = ab_next_hash.as_bytes();
 
-        let signatures = vec![validators.sign(0, message), validators.sign(1, message)];
+        let signatures = validators.all_sign(2, message).to_vec();
 
         let statement = StatementIn {
             ab_curr,

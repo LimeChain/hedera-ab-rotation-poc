@@ -30,8 +30,6 @@ fn main() -> Result<()> {
 
     let ab_curr: AddressBookIn = vec![
         (validators.verifying_key(0), 1),
-        // (validators.verifying_key(1), 15),
-        // (validators.verifying_key(2), 70),
     ];
 
     let ab_curr_words = risc0_zkvm::serde::to_vec(&ab_curr).unwrap();
@@ -39,11 +37,7 @@ fn main() -> Result<()> {
 
     let message = ab_next_hash.as_bytes();
 
-    let signatures = vec![
-        // Just one
-        validators.sign(0, message),
-        // validators.sign(1, message),
-    ];
+    let signatures = validators.all_sign(1, message).to_vec();
 
     let statement = StatementIn {
         ab_curr,
@@ -73,6 +67,8 @@ fn main() -> Result<()> {
     println!("Cycle count: {}", cycle_count);
 
     let ab_curr_hash_committed = receipt.journal.decode::<Digest>()?;
+
+    assert_eq!(ab_next_hash, ab_curr_hash_committed);
 
     let mut receipt_file = std::fs::File::create_new("./receipt.json")?;
 
