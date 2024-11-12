@@ -1,6 +1,7 @@
 #![no_main]
 #![no_std]
 
+use address_book::MAXIMUM_VALIDATORS;
 use risc0_zkvm::guest::env;
 // use ark_bn254::{Bn254, Fr, G1Projective, G2Projective};
 // use ark_ec::pairing::Pairing;
@@ -11,6 +12,7 @@ mod address_book;
 mod ed25519;
 mod statement;
 
+use smallvec::SmallVec;
 use statement::{Statement, StatementIn};
 
 use crate::address_book::digest_address_book_in;
@@ -33,6 +35,21 @@ fn main() {
 
     // Convert the ab_next_hash into bytes (from words)
     let ab_next_hash_bytes: &[u8] = statement.ab_next_hash.as_bytes();
+
+    // Check that all signatures are unique (no duplicates)
+    // NOTE: we don't have {BTree,Hash}Set, this (O(n^2)) is fine for small amounts of `MAXIMUM_VALIDATORS`
+    let all_unique = {
+        let mut unique = SmallVec::<[&ed25519::Signature; MAXIMUM_VALIDATORS]>::new();
+        statement.signatures.iter().all(|sig| {
+            if unique.contains(&sig) {
+                false
+            } else {
+                unique.push(sig);
+                true
+            }
+        })
+    };
+    assert!(all_unique);
 
     let signers_weight: u64 = statement
         .signatures

@@ -22,7 +22,7 @@ impl VerifyingKey {
 ///////////
 
 #[repr(transparent)]
-#[derive(Debug, Deref)]
+#[derive(Debug, Deref, PartialEq, Eq)]
 pub struct Signature(pub ed25519_dalek::Signature);
 #[repr(transparent)]
 #[derive(Debug, Deref)]
