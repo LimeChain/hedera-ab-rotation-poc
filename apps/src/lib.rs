@@ -26,6 +26,18 @@ impl<const N: usize> SigningKeys<N> {
         *self.0[i].verifying_key().as_bytes()
     }
 
+    pub fn verifying_keys(&self) -> [[u8; ed25519_dalek::PUBLIC_KEY_LENGTH]; N] {
+        core::array::from_fn(|i| self.verifying_key(i))
+    }
+
+    pub fn verifying_keys_with_weights(
+        &self,
+        weights: [u64; N],
+    ) -> [([u8; ed25519_dalek::PUBLIC_KEY_LENGTH], u64); N] {
+        let verifying_keys = self.verifying_keys();
+        core::array::from_fn(|i| (verifying_keys[i], weights[i]))
+    }
+
     pub fn all_sign(
         &self,
         signers: impl Into<Signers<N>>,

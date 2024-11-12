@@ -1,19 +1,10 @@
 use std::io::Write;
 
-use alloy::{
-    network::EthereumWallet, providers::ProviderBuilder, signers::local::PrivateKeySigner,
-    sol_types::SolValue,
-};
-use alloy_primitives::{Address, U256};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use apps::{gen_validators, AddressBookIn, StatementIn};
-use clap::Parser;
 use methods::AB_ROTATION_ELF;
-use risc0_ethereum_contracts::encode_seal;
 use risc0_zkvm::sha::{Digest, Sha256};
 use risc0_zkvm::{default_prover, ExecutorEnv, ProverOpts, VerifierContext};
-use serde::Deserialize;
-use url::Url;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -28,9 +19,7 @@ fn main() -> Result<()> {
     let ab_next_words = risc0_zkvm::serde::to_vec(&ab_next).unwrap();
     let ab_next_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_next_words);
 
-    let ab_curr: AddressBookIn = vec![
-        (validators.verifying_key(0), 1),
-    ];
+    let ab_curr: AddressBookIn = validators.verifying_keys_with_weights([1]).to_vec();
 
     let ab_curr_words = risc0_zkvm::serde::to_vec(&ab_curr).unwrap();
     let ab_curr_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_curr_words);
@@ -68,7 +57,7 @@ fn main() -> Result<()> {
 
     let ab_curr_hash_committed = receipt.journal.decode::<Digest>()?;
 
-    assert_eq!(ab_next_hash, ab_curr_hash_committed);
+    assert_eq!(ab_curr_hash, ab_curr_hash_committed);
 
     let mut receipt_file = std::fs::File::create_new("./receipt.json")?;
 

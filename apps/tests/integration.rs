@@ -20,11 +20,7 @@ mod tests {
         let ab_next_words = risc0_zkvm::serde::to_vec(&ab_next).unwrap();
         let ab_next_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_next_words);
 
-        let ab_curr: AddressBookIn = vec![
-            (validators.verifying_key(0), 15),
-            (validators.verifying_key(1), 15),
-            (validators.verifying_key(2), 70),
-        ];
+        let ab_curr: AddressBookIn = validators.verifying_keys_with_weights([15, 15, 70]).to_vec();
 
         let ab_curr_words = risc0_zkvm::serde::to_vec(&ab_curr).unwrap();
         let ab_curr_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_curr_words);
@@ -71,12 +67,7 @@ mod tests {
         let ab_next_words = risc0_zkvm::serde::to_vec(&ab_next).unwrap();
         let ab_next_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_next_words);
 
-        let ab_curr: AddressBookIn = vec![
-            (validators.verifying_key(0), 15),
-            (validators.verifying_key(1), 15),
-            (validators.verifying_key(2), 70),
-            (validators.verifying_key(3), 1),
-        ];
+        let ab_curr: AddressBookIn = validators.verifying_keys_with_weights([15, 15, 70, 1]).to_vec();
 
         let ab_curr_words = risc0_zkvm::serde::to_vec(&ab_curr).unwrap();
         let ab_curr_hash = *risc0_zkvm::sha::Impl::hash_words(&ab_curr_words);

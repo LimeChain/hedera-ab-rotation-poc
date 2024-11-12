@@ -24,8 +24,8 @@ fn main() {
     let statement_in: StatementIn = env::read::<StatementIn>();
 
     assert!(
-        statement_in.ab_curr.len() == statement_in.signatures.len(),
-        "There is an (optional) signature for each current validator"
+        statement_in.signatures.len() == statement_in.ab_curr.len(),
+        "There has to be an (optional) signature for each current validator"
     );
 
     // Get the SHA256 of the current AB (using the provided ECALL)
@@ -43,14 +43,16 @@ fn main() {
     let signers_weight: u64 = core::iter::zip(statement.ab_curr.0, statement.signatures.0).fold(
         0,
         |acc, (abe, ms)| -> u64 {
-            let mw = ms.and_then(|signature| {
-                abe.ed25519_public_key
-                    .verify_strict(ab_next_hash_bytes, &signature)
-                    .ok()
-                    .map(|_| abe.weight)
-            });
+            let added_weight = ms
+                .map(|signature| {
+                    abe.ed25519_public_key
+                        .verify_strict(ab_next_hash_bytes, &signature)
+                        .map(|_| abe.weight)
+                        .expect("Invalid signature")
+                })
+                .unwrap_or(0);
 
-            acc + mw.unwrap_or_default()
+            acc + added_weight
         },
     );
 
